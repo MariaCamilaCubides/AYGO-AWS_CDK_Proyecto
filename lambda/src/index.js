@@ -16,7 +16,7 @@ exports.handler = async (event, context, callback) => {
         const secretManager = new AWS.SecretsManager({
           region: 'us-east-1',
         });
-        const secretParams: AWS.SecretsManager.GetSecretValueRequest = {
+        const secretParams = new AWS.SecretsManager.GetSecretValueRequest = {
           SecretId: dbSecretArn,
         };
         const dbSecret = await secretManager.getSecretValue(secretParams).promise();

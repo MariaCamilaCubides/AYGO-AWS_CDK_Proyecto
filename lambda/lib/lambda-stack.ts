@@ -2,6 +2,7 @@ import * as path from "path"
 import * as cdk from '@aws-cdk/core';
 import * as ec2 from "@aws-cdk/aws-ec2";
 import * as rds from "@aws-cdk/aws-rds";
+import * as iam from "@aws-cdk/aws-iam";
 import { NodejsFunctionProps, NodejsFunction } from "@aws-cdk/aws-lambda-nodejs"
 import { Runtime } from '@aws-cdk/aws-lambda';
 
@@ -47,8 +48,12 @@ export class LambdaStack extends cdk.Stack {
       'Lambda to Postgres database'
     );
 
+    const role = iam.Role.fromRoleArn(this, 'Role', `${process.env.ROLE_ARN}`, {
+      mutable: false,
+    });
+
     const rdsLambdaFn = new NodejsFunction(this, 'rdsLambdaFn', {
-      entry: path.join(__dirname, '../src/lambdas', 'rds-lambda.ts'),
+      entry: path.join(__dirname, '../src', 'index.js'),
       ...nodeJsFunctionProps,
       functionName: 'rdsLambdaFn',
       environment: {
@@ -61,6 +66,7 @@ export class LambdaStack extends cdk.Stack {
         subnetType: ec2.SubnetType.PRIVATE_WITH_NAT,
       }),
       securityGroups: [lambdaSG],
+      role,
     });
 
     dbInstance.secret?.grantRead(rdsLambdaFn);
