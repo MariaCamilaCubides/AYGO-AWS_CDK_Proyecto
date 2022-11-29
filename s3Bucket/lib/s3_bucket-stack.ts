@@ -15,5 +15,6 @@ export class S3BucketStack extends cdk.Stack {
     });
 
     s3Bucket.grantRead(new iam.AccountRootPrincipal());
+    s3Bucket.grantPut(new iam.AccountRootPrincipal())
   }
 }
