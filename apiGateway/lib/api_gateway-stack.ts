@@ -34,17 +34,13 @@ export class ApiGatewayStack extends cdk.Stack {
       cognitoUserPools: [userPool]
     });
 
-    const api = new apiGateway.RestApi(this, 'finalProyectApi', {
+    const api = new apiGateway.RestApi(this, 'finalProyectApi1', {
       cloudWatchRole: false,
-      restApiName: "Final proyect API",
+      restApiName: "Final proyect API 1",
       binaryMediaTypes: ["*/*"],
       minimumCompressionSize: 0,
-      defaultCorsPreflightOptions: {
-        allowOrigins: apiGateway.Cors.ALL_ORIGINS,
-        allowMethods: apiGateway.Cors.ALL_METHODS // this is also the default
-      },
       endpointConfiguration: {
-        types: [ apiGateway.EndpointType.EDGE ]
+        types: [ apiGateway.EndpointType.REGIONAL ]
       }
     });
 
@@ -55,14 +51,14 @@ export class ApiGatewayStack extends cdk.Stack {
     const putObjectIntegration = new apiGateway.AwsIntegration({
       service: "s3",
       region: "us-east-1",
-      path: '{bucket}/{object}',
+      path: '{bucket}/{item}',
       integrationHttpMethod: "PUT",
       options: {
         credentialsRole: role,
         passthroughBehavior: apiGateway.PassthroughBehavior.WHEN_NO_TEMPLATES,
         requestParameters: { 
-          'integration.request.path.bucket': 'method.request.path.folder',
-          'integration.request.path.object': 'method.request.path.item',
+          'integration.request.path.bucket': 'method.request.path.bucket',
+          'integration.request.path.item': 'method.request.path.item',
           'integration.request.header.Accept': 'method.request.header.Accept' 
         },
         integrationResponses: [{
@@ -74,13 +70,12 @@ export class ApiGatewayStack extends cdk.Stack {
 
     //PutObject method options
     const putObjectMethodOptions = {
-      authorizer: auth,
-      authorizationType: apiGateway.AuthorizationType.COGNITO,
+      authorizationType: apiGateway.AuthorizationType.NONE,
       requestParameters: {
-        'method.request.path.folder': true,
+        'method.request.path.bucket': true,
         'method.request.path.item': true,
-        'method.request.header.Accept': true,
-        'method.request.header.Content-Type': true
+        'method.request.header.Accept': false,
+        'method.request.header.Content-Type': false
       },
       methodResponses: [
         {
