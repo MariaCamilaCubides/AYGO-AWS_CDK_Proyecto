@@ -30,6 +30,7 @@ exports.handler = async (event, context, callback) => {
             text: queryText,
             values: queryValues,
         };
+        await client.query(queryString);
         await client.end()
         response.statusCode = 200;
         response.body = 'Time off requested. Waiting for the approval';

@@ -5,8 +5,8 @@
     "main": "index.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
-        "deploy": " — zip-file fileb://Lambda-Deployment.zip",
-        "predeploy": "zip -r Lambda-Deployment.zip * -x *.zip *.log"
+        "macPredeploy": "zip -r Lambda-Deployment.zip * -x *.zip *.log",
+        "windowsPredeploy": "Compress-Archive -LiteralPath node_modules, index.js -DestinationPath lambda.zip"
     },
     "keywords": [
         "postgres"
