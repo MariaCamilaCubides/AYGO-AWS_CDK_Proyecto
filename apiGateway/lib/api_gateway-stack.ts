@@ -12,8 +12,8 @@ export class ApiGatewayStack extends cdk.Stack {
       mutable: false,
     });
 
-    const userPool = new cognito.UserPool(this, 'UserPool', {
-      userPoolName: 'finalProyectUsers',
+    /* const userPool = new cognito.UserPool(this, 'UserPool', {
+      userPoolName: 'finalProjectUsers',
       passwordPolicy: {
         minLength: 8,
         requireLowercase: true,
@@ -30,17 +30,17 @@ export class ApiGatewayStack extends cdk.Stack {
       },
     });
 
-    const auth = new apiGateway.CognitoUserPoolsAuthorizer(this, 'finalProyectAuthorizer', {
+    const auth = new apiGateway.CognitoUserPoolsAuthorizer(this, 'finalProjectAuthorizer', {
       cognitoUserPools: [userPool]
-    });
+    }); */
 
-    const api = new apiGateway.RestApi(this, 'finalProyectApi1', {
+    const api = new apiGateway.RestApi(this, 'S3Api', {
       cloudWatchRole: false,
-      restApiName: "Final proyect API 1",
+      restApiName: "Final project S3 API",
       binaryMediaTypes: ["*/*"],
       minimumCompressionSize: 0,
       endpointConfiguration: {
-        types: [ apiGateway.EndpointType.REGIONAL ]
+        types: [ apiGateway.EndpointType.EDGE ]
       }
     });
 
@@ -70,6 +70,7 @@ export class ApiGatewayStack extends cdk.Stack {
 
     //PutObject method options
     const putObjectMethodOptions = {
+      // authorizer: auth,
       authorizationType: apiGateway.AuthorizationType.NONE,
       requestParameters: {
         'method.request.path.bucket': true,
@@ -87,7 +88,16 @@ export class ApiGatewayStack extends cdk.Stack {
     };
     bucketItemResource.addMethod("PUT", putObjectIntegration, putObjectMethodOptions);
 
-    const lambdaResource = api.root.addResource('timeOff')
+    const api2 = new apiGateway.RestApi(this, 'lambdaApi', {
+      cloudWatchRole: false,
+      restApiName: "Final project lambda API",
+      minimumCompressionSize: 0,
+      endpointConfiguration: {
+        types: [ apiGateway.EndpointType.EDGE ]
+      }
+    });
+
+    const lambdaResource = api2.root.addResource('timeOff')
 
     const importedLambdaFromArn = lambda.Function.fromFunctionArn(
       this,
@@ -96,8 +106,8 @@ export class ApiGatewayStack extends cdk.Stack {
     );
 
     lambdaResource.addMethod('POST', new apiGateway.LambdaIntegration(importedLambdaFromArn), {
-      authorizer: auth,
-      authorizationType: apiGateway.AuthorizationType.COGNITO,
+      // authorizer: auth,
+      authorizationType: apiGateway.AuthorizationType.NONE,
     });
 
   }
