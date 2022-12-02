@@ -84,7 +84,8 @@ export class ApiGatewayStack extends cdk.Stack {
           responseParameters: {
             'method.response.header.Content-Type': true
           }
-        }]
+        }
+      ]
     };
     bucketItemResource.addMethod("PUT", putObjectIntegration, putObjectMethodOptions);
 
@@ -101,14 +102,39 @@ export class ApiGatewayStack extends cdk.Stack {
 
     const importedLambdaFromArn = lambda.Function.fromFunctionArn(
       this,
-      'external-lambda-from-arn',
+      'finalProject',
       `${process.env.LAMBDA_ARN}`,
     );
 
-    lambdaResource.addMethod('POST', new apiGateway.LambdaIntegration(importedLambdaFromArn), {
+    const LambdaIntegrationOptions = {
+      proxy: false,
+      credentialsRole: role,
+      integrationResponses: [{
+        statusCode: '200',
+        responseParameters: { 'method.response.header.Content-Type': 'integration.response.header.Content-Type'}
+      }] 
+    }
+
+    const lambdaMethodOptions = {
       // authorizer: auth,
       authorizationType: apiGateway.AuthorizationType.NONE,
-    });
+      requestParameters: {
+        'method.request.path.bucket': true,
+        'method.request.path.item': true,
+        'method.request.header.Accept': false,
+        'method.request.header.Content-Type': false
+      },
+      methodResponses: [
+        {
+          statusCode: '200',
+          responseParameters: {
+            'method.response.header.Content-Type': true
+          }
+        }
+      ]
+    }
+
+    lambdaResource.addMethod('POST', new apiGateway.LambdaIntegration(importedLambdaFromArn, LambdaIntegrationOptions ), lambdaMethodOptions);
 
   }
 }
