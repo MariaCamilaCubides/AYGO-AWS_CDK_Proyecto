@@ -7,26 +7,23 @@ export class DatabaseStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
     
-    const vpc = new ec2.Vpc(this, 'VpcLambda', {
-      vpcName: 'VpcLambda',
-      maxAzs: 2,
-      subnetConfiguration: [
-        {
-          cidrMask: 24,
-          name: 'privatelambda',
-          subnetType: ec2.SubnetType.PRIVATE_WITH_NAT,
-        },
-        {
-          cidrMask: 24,
-          name: 'public',
-          subnetType: ec2.SubnetType.PUBLIC,
-        },
-      ],
+    const vpc = ec2.Vpc.fromLookup(this, "VPC", {
+      isDefault: true
     });
 
-    const dbSecurityGroup = new ec2.SecurityGroup(this, 'DbSecurityGroup', {
+    const dbSecurityGroup = ec2.SecurityGroup.fromSecurityGroupId(this, 'SecurityGroupImport', `${process.env.SECURITY_GROUP_ID}`, {
+      allowAllOutbound: true,
+    });
+
+    const lambdaSG = new ec2.SecurityGroup(this, 'LambdaSG', {
       vpc,
     });
+
+    dbSecurityGroup.addIngressRule(
+      lambdaSG,
+      ec2.Port.tcp(5432),
+      'Lambda to Postgres database'
+    );
 
     const dbInstance = new rds.DatabaseInstance(this, 'Instance', {
       engine: rds.DatabaseInstanceEngine.postgres({
@@ -39,10 +36,11 @@ export class DatabaseStack extends cdk.Stack {
       ),
       vpc,
       vpcSubnets: vpc.selectSubnets({
-        subnetType: ec2.SubnetType.PRIVATE_WITH_NAT,
+        subnetType: ec2.SubnetType.PUBLIC,
       }),
-      instanceIdentifier: 'localDB',
-      databaseName: 'localDB',
+      publiclyAccessible: true,
+      instanceIdentifier: 'finalProyectDb',
+      databaseName: 'finalProyectDb',
       securityGroups: [dbSecurityGroup],
       credentials: rds.Credentials.fromGeneratedSecret('postgres'),
       maxAllocatedStorage: 200,
@@ -60,7 +58,7 @@ export class DatabaseStack extends cdk.Stack {
     //   vpc,
     //   requireTLS: false,
     //   vpcSubnets: vpc.selectSubnets({
-    //     subnetType: ec2.SubnetType.PRIVATE_WITH_NAT,
+    //     subnetType: ec2.SubnetType.PUBLIC,
     //   }),
     // });
   }

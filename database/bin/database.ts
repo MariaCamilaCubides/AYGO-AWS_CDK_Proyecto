@@ -7,6 +7,6 @@ import { DatabaseStack } from '../lib/database-stack';
 dotenv.config();
 
 const app = new cdk.App();
-new DatabaseStack(app, 'DatabaseStack', {
+new DatabaseStack(app, 'Db', {
   env: { account: process.env.AWS_ACCOUNT, region: process.env.AWS_REGION },
 });
