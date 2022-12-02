@@ -11,13 +11,21 @@ export class DatabaseStack extends cdk.Stack {
       isDefault: true
     });
 
-    const dbSecurityGroup = ec2.SecurityGroup.fromSecurityGroupId(this, 'SecurityGroupImport', `${process.env.SECURITY_GROUP_ID}`, {
+    const lambdaSG = new ec2.SecurityGroup(this, 'LambdaSG', {
+      vpc,
       allowAllOutbound: true,
     });
 
-    const lambdaSG = new ec2.SecurityGroup(this, 'LambdaSG', {
+    const dbSecurityGroup =  new ec2.SecurityGroup(this, 'dbSecurityGroup', {
       vpc,
+      allowAllOutbound: true,
     });
+
+    dbSecurityGroup.addIngressRule(
+      ec2.Peer.anyIpv4(),
+      ec2.Port.tcp(5432),
+      "Allow public access to Postgres"
+     );
 
     dbSecurityGroup.addIngressRule(
       lambdaSG,
